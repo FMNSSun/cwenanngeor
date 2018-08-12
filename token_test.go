@@ -20,6 +20,15 @@ func TestSpecials(t *testing.T) {
 	checkTypes(" ; ", []TokenType{TT_SEMICOLON}, t)
 }
 
+func TestLits(t *testing.T) {
+	checkTypes("5", []TokenType{TT_LITINT}, t)
+	checkTypes("5.0", []TokenType{TT_LITFLOAT}, t)
+	checkTypes("1.", []TokenType{TT_LITFLOAT}, t)
+	checkTypes("5func", []TokenType{TT_LITINT, TT_FUNC}, t)
+	checkTypes("5.func", []TokenType{TT_LITFLOAT, TT_FUNC}, t)
+	checkTypes("5.1func", []TokenType{TT_LITFLOAT, TT_FUNC}, t)
+}
+
 func checkTypes(str string, tts []TokenType, t *testing.T) {
 	tz := NewTokenizerString(str)
 
@@ -32,7 +41,7 @@ func checkTypes(str string, tts []TokenType, t *testing.T) {
 		}
 
 		if tk.Type != v {
-			t.Fatalf("Expected TT %d but got %d", v, tk.Type)
+			t.Fatalf("Expected TT %d but got %d: %q", v, tk.Type, str)
 			return
 		}
 	}

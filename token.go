@@ -31,6 +31,7 @@ const TT_IF = TokenType(7)
 const TT_ELSE = TokenType(8)
 const TT_LPAREN = TokenType(9)
 const TT_RPAREN = TokenType(10)
+const TT_LITFLOAT = TokenType(11)
 
 type Tokenizer interface {
 	Next() (*Token, error)
@@ -98,6 +99,58 @@ func (t *tokenizer) read() (rune, error) {
 	}
 
 	return rn, nil
+}
+
+func (t *tokenizer) litintfloat(rn rune) (*Token, error) {
+	var buf bytes.Buffer
+	buf.WriteRune(rn)
+
+	seenDot := false
+
+	for {
+		rn, err := t.read()
+
+		if err != nil {
+			return nil, err
+		}
+
+		if rn == eof {
+			break
+		}
+
+		if isdigit(rn) {
+			buf.WriteRune(rn)
+		} else if rn == '.' {
+			if seenDot {
+				return nil, &TokenizerError{
+					Pos: t.filepos(),
+					Err: err,
+				}
+			}
+			seenDot = true
+			buf.WriteRune(rn)
+		} else {
+			t.unread(rn)
+			break
+		}
+	}
+
+	str := buf.String()
+
+	if seenDot {
+		return &Token{
+			SVal: str,
+			Type: TT_LITFLOAT,
+			Pos:  t.filepos(),
+		}, nil
+
+	} else {
+		return &Token{
+			SVal: str,
+			Type: TT_LITINT,
+			Pos:  t.filepos(),
+		}, nil
+	}
 }
 
 func (t *tokenizer) ident(rn rune) (*Token, error) {
@@ -207,6 +260,8 @@ func (t *tokenizer) Next() (*Token, error) {
 
 	if isletter(rn) {
 		return t.ident(rn)
+	} else if isdigit(rn) {
+		return t.litintfloat(rn)
 	}
 
 	if rn == eof {

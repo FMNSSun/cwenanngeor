@@ -4,6 +4,10 @@ func isident(rn rune) bool {
 	return isletter(rn)
 }
 
+func isdigit(rn rune) bool {
+	return rn >= '0' && rn <= '9'
+}
+
 func isletter(rn rune) bool {
 	if rn >= 'a' && rn <= 'z' {
 		return true
