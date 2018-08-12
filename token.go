@@ -137,6 +137,13 @@ func (t *tokenizer) litintfloat(rn rune) (*Token, error) {
 
 	str := buf.String()
 
+	if str == "-" {
+		return nil, &TokenizerError{
+			Pos: t.filepos(),
+			Err: fmt.Errorf("Literal %q is missing at least one digit.", str),
+		}
+	}
+
 	if seenDot {
 		return &Token{
 			SVal: str,
@@ -260,7 +267,7 @@ func (t *tokenizer) Next() (*Token, error) {
 
 	if isletter(rn) {
 		return t.ident(rn)
-	} else if isdigit(rn) {
+	} else if isdigit(rn) || rn == '-' {
 		return t.litintfloat(rn)
 	}
 

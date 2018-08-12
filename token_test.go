@@ -27,6 +27,30 @@ func TestLits(t *testing.T) {
 	checkTypes("5func", []TokenType{TT_LITINT, TT_FUNC}, t)
 	checkTypes("5.func", []TokenType{TT_LITFLOAT, TT_FUNC}, t)
 	checkTypes("5.1func", []TokenType{TT_LITFLOAT, TT_FUNC}, t)
+	checkTypes("-5.1", []TokenType{TT_LITFLOAT}, t)
+	checkTypes("-399", []TokenType{TT_LITINT}, t)
+	mustError("-", t)
+	mustError("5.1.", t)
+	mustError("5.1.2", t)
+	mustError("5..1", t)
+}
+
+func mustError(str string, t *testing.T) {
+	tz := NewTokenizerString(str)
+
+	for {
+		tk, err := tz.Next()
+
+		if err != nil {
+			return
+		}
+
+		if tk == nil {
+			break
+		}
+	}
+
+	t.Fatalf("Expected error but got none: %q", str)
 }
 
 func checkTypes(str string, tts []TokenType, t *testing.T) {
