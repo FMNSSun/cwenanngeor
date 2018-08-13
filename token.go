@@ -32,6 +32,7 @@ const TT_ELSE = TokenType(8)
 const TT_LPAREN = TokenType(9)
 const TT_RPAREN = TokenType(10)
 const TT_LITFLOAT = TokenType(11)
+const TT_EOF = TokenType(12)
 
 type Tokenizer interface {
 	Next() (*Token, error)
@@ -74,6 +75,10 @@ func (t *tokenizer) filepos() *FilePos {
 }
 
 func (t *tokenizer) unread(rn rune) {
+	if t.rn != eof {
+		panic("BUG t.rn is not empty!")
+	}
+
 	t.rn = rn
 }
 
@@ -192,18 +197,6 @@ func (t *tokenizer) ident(rn rune) (*Token, error) {
 			Type: TT_FUNC,
 			Pos:  t.filepos(),
 		}, nil
-	case "else":
-		return &Token{
-			SVal: str,
-			Type: TT_ELSE,
-			Pos:  t.filepos(),
-		}, nil
-	case "if":
-		return &Token{
-			SVal: str,
-			Type: TT_IF,
-			Pos:  t.filepos(),
-		}, nil
 	}
 
 	return &Token{
@@ -272,7 +265,11 @@ func (t *tokenizer) Next() (*Token, error) {
 	}
 
 	if rn == eof {
-		return nil, nil
+		return &Token{
+			SVal: "<eof>",
+			Type: TT_EOF,
+			Pos:  t.filepos(),
+		}, nil
 	}
 
 	return nil, &TokenizerError{

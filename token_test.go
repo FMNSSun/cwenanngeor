@@ -45,7 +45,7 @@ func mustError(str string, t *testing.T) {
 			return
 		}
 
-		if tk == nil {
+		if tk.Type == TT_EOF {
 			break
 		}
 	}
@@ -77,7 +77,7 @@ func checkTypes(str string, tts []TokenType, t *testing.T) {
 		return
 	}
 
-	if tk != nil {
+	if tk.Type != TT_EOF {
 		t.Fatalf("Expected EOF but still got a token")
 		return
 	}
