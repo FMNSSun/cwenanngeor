@@ -14,8 +14,17 @@ type Arg struct {
 	Type Type
 }
 
+var VoidArg Arg = Arg{}
+
 type Type struct {
+	Kind TypeKind
+	Type string
 }
+
+type TypeKind uint8
+
+const TK_PRIM = TypeKind(0)
+const TK_LIST = TypeKind(1)
 
 var VoidType Type = Type{}
 
@@ -82,8 +91,54 @@ func (*SExpNode) IsNode() bool {
 	return true
 }
 
+func TypeEqual(t1 Type, t2 Type) bool {
+	return t1.Kind == t2.Kind && t1.Type == t2.Type
+}
+
+func ArgEqual(a1 Arg, a2 Arg) bool {
+	return a1.Name == a2.Name && TypeEqual(a1.Type, a2.Type)
+}
+
 func ASTEqual(n1 Node, n2 Node) bool {
 	switch n1.(type) {
+	case *FuncNode:
+		switch n2.(type) {
+		case *FuncNode:
+			fn1 := n1.(*FuncNode)
+			fn2 := n2.(*FuncNode)
+
+			if fn1.Name != fn2.Name {
+				return false
+			}
+
+			if len(fn1.Args) != len(fn2.Args) {
+				return false
+			}
+
+			if len(fn1.Body) != len(fn2.Body) {
+				return false
+			}
+
+			if !TypeEqual(fn1.RetType, fn2.RetType) {
+				return false
+			}
+
+			for i := 0; i < len(fn1.Args); i++ {
+				if !ArgEqual(fn1.Args[i], fn2.Args[i]) {
+					return false
+				}
+			}
+
+			for i := 0; i < len(fn1.Body); i++ {
+				if !ASTEqual(fn1.Body[i], fn2.Body[i]) {
+					return false
+				}
+			}
+
+			return true
+		default:
+			return false
+		}
 	case *LitFloatNode:
 		switch n2.(type) {
 		case *LitFloatNode:

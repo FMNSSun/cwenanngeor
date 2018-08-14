@@ -118,6 +118,80 @@ func (p *Parser) parseData() (Node, error) {
 	}
 }
 
+func (p *Parser) parseArg() (Arg, error) {
+	tk, err := p.read()
+
+	if err != nil {
+		return VoidArg, nil
+	}
+
+	if tk.Type != TT_LPAREN {
+		return VoidArg, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected `(` but got `%s`.", tk.SVal),
+		}
+	}
+
+	tk, err = p.read()
+
+	if err != nil {
+		return VoidArg, nil
+	}
+
+	if tk.Type != TT_IDENT {
+		return VoidArg, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected identifier but got `%s`.", tk.SVal),
+		}
+	}
+
+	aname := tk.SVal
+
+	tp, err := p.parseType()
+
+	if err != nil {
+		return VoidArg, err
+	}
+
+	tk, err = p.read()
+
+	if err != nil {
+		return VoidArg, err
+	}
+
+	if tk.Type != TT_RPAREN {
+		return VoidArg, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected `)` but got `%s`.", tk.SVal),
+		}
+	}
+
+	return Arg{
+		Name: aname,
+		Type: tp,
+	}, nil
+}
+
+func (p *Parser) parseType() (Type, error) {
+	tk, err := p.read()
+
+	if err != nil {
+		return VoidType, err
+	}
+
+	if tk.Type == TT_IDENT {
+		return Type{
+			Kind: TK_PRIM,
+			Type: tk.SVal,
+		}, nil
+	}
+
+	return VoidType, &ParserError{
+		Token: tk,
+		Msg:   fmt.Sprintf("`%s` is not a type.", tk.SVal),
+	}
+}
+
 func (p *Parser) parseFunc() (Node, error) {
 	// Next token must be an LPAREN
 	tk, err := p.read()
@@ -192,6 +266,23 @@ func (p *Parser) parseFunc() (Node, error) {
 		switch tk.Type {
 		case TT_RPAREN:
 			done = true
+		case TT_LPAREN:
+			fmt.Println("got arg")
+			p.unread(tk)
+
+			arg, err := p.parseArg()
+
+			if err != nil {
+				return nil, err
+			}
+
+			args[aj] = arg
+			aj++
+		default:
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("Expected `(` or `)` but got `%s`", tk.SVal),
+			}
 		}
 
 		if done {
@@ -200,6 +291,17 @@ func (p *Parser) parseFunc() (Node, error) {
 	}
 
 	ret := VoidType
+
+	tk, err = p.read()
+
+	if tk.Type != TT_RPAREN {
+		p.unread(tk)
+		ret, err = p.parseType()
+
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &FuncNode{
 		Args:    args[:aj],

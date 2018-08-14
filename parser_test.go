@@ -6,6 +6,20 @@ import (
 
 func TestParseSExp(t *testing.T) {
 
+	checkASTFunc(
+		"(func main ((a int)) float)",
+		&FuncNode{
+			Name:    "main",
+			RetType: Type{Kind: TK_PRIM, Type: "float"},
+			Body:    nil,
+			Args: []Arg{
+				Arg{
+					Type: Type{Kind: TK_PRIM, Type: "int"},
+					Name: "a",
+				},
+			},
+		}, t)
+
 	checkASTSExp(
 		"(foo 'fooo)",
 		&SExpNode{
@@ -39,6 +53,20 @@ func TestParseSExp(t *testing.T) {
 				},
 			},
 		}, t)
+}
+
+func checkASTFunc(code string, exp Node, t *testing.T) {
+	p := NewParser(NewTokenizerString(code))
+
+	n, err := p.parseFunc()
+
+	if err != nil {
+		t.Fatalf("Unexpected error: %s.", err.Error())
+	}
+
+	if !ASTEqual(n, exp) {
+		t.Fatalf("ASTs do not match! %+v %+v", n, exp)
+	}
 }
 
 func checkASTSExp(code string, exp Node, t *testing.T) {
