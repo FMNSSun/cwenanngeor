@@ -4,6 +4,11 @@ type Node interface {
 	IsNode() bool
 }
 
+type Module struct {
+	Name  string
+	Funcs []*FuncNode
+}
+
 type Arg struct {
 	Name string
 	Type Type
@@ -12,14 +17,22 @@ type Arg struct {
 type Type struct {
 }
 
+var VoidType Type = Type{}
+
 type FuncNode struct {
-	Name string
-	Args []Arg
-	Body []Node
+	Name    string
+	Args    []Arg
+	Body    []Node
+	RetType Type
+	Token   *Token
+}
+
+func (*FuncNode) IsNode() bool {
+	return true
 }
 
 type LitIntNode struct {
-	SVal  string
+	Value int64
 	Token *Token
 }
 
@@ -27,8 +40,17 @@ func (*LitIntNode) IsNode() bool {
 	return true
 }
 
+type QuotNode struct {
+	Ident string
+	Token *Token
+}
+
+func (*QuotNode) IsNode() bool {
+	return true
+}
+
 type LitFloatNode struct {
-	SVal  string
+	Value float64
 	Token *Token
 }
 
@@ -65,14 +87,14 @@ func ASTEqual(n1 Node, n2 Node) bool {
 	case *LitFloatNode:
 		switch n2.(type) {
 		case *LitFloatNode:
-			return n1.(*LitFloatNode).SVal == n2.(*LitFloatNode).SVal
+			return n1.(*LitFloatNode).Value == n2.(*LitFloatNode).Value
 		default:
 			return false
 		}
 	case *LitIntNode:
 		switch n2.(type) {
 		case *LitIntNode:
-			return n1.(*LitIntNode).SVal == n2.(*LitIntNode).SVal
+			return n1.(*LitIntNode).Value == n2.(*LitIntNode).Value
 		default:
 			return false
 		}
@@ -80,6 +102,13 @@ func ASTEqual(n1 Node, n2 Node) bool {
 		switch n2.(type) {
 		case *ReadVarNode:
 			return n1.(*ReadVarNode).Name == n2.(*ReadVarNode).Name
+		default:
+			return false
+		}
+	case *QuotNode:
+		switch n2.(type) {
+		case *QuotNode:
+			return n1.(*QuotNode).Ident == n2.(*QuotNode).Ident
 		default:
 			return false
 		}
@@ -101,7 +130,7 @@ func ASTEqual(n1 Node, n2 Node) bool {
 				}
 			}
 
-			return true
+			return n1_.FuncName == n2_.FuncName
 		default:
 			return false
 		}

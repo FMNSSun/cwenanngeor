@@ -6,33 +6,42 @@ import (
 
 func TestParseSExp(t *testing.T) {
 
-	checkAST(
+	checkASTSExp(
+		"(foo 'fooo)",
+		&SExpNode{
+			FuncName: "foo",
+			Exps: []Node{
+				&QuotNode{Ident: "fooo"},
+			},
+		}, t)
+
+	checkASTSExp(
 		"(foo 5 6)",
 		&SExpNode{
 			FuncName: "foo",
 			Exps: []Node{
-				&LitIntNode{SVal: "5"},
-				&LitIntNode{SVal: "6"},
+				&LitIntNode{Value: 5},
+				&LitIntNode{Value: 6},
 			},
 		}, t)
 
-	checkAST(
+	checkASTSExp(
 		"(foo 5 (bar 1))",
 		&SExpNode{
 			FuncName: "foo",
 			Exps: []Node{
-				&LitIntNode{SVal: "5"},
+				&LitIntNode{Value: 5},
 				&SExpNode{
 					FuncName: "bar",
 					Exps: []Node{
-						&LitIntNode{SVal: "1"},
+						&LitIntNode{Value: 1},
 					},
 				},
 			},
 		}, t)
 }
 
-func checkAST(code string, exp Node, t *testing.T) {
+func checkASTSExp(code string, exp Node, t *testing.T) {
 	p := NewParser(NewTokenizerString(code))
 
 	n, err := p.parseSExp()

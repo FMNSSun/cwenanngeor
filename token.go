@@ -33,6 +33,7 @@ const TT_LPAREN = TokenType(9)
 const TT_RPAREN = TokenType(10)
 const TT_LITFLOAT = TokenType(11)
 const TT_EOF = TokenType(12)
+const TT_QUOT = TokenType(13)
 
 type Tokenizer interface {
 	Next() (*Token, error)
@@ -254,6 +255,12 @@ func (t *tokenizer) Next() (*Token, error) {
 		return &Token{
 			SVal: ")",
 			Type: TT_RPAREN,
+			Pos:  t.filepos(),
+		}, nil
+	case '\'':
+		return &Token{
+			SVal: "'",
+			Type: TT_QUOT,
 			Pos:  t.filepos(),
 		}, nil
 	}

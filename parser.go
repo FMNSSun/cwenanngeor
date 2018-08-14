@@ -2,6 +2,7 @@ package cwenanngeor
 
 import (
 	"fmt"
+	"strconv"
 )
 
 type Parser struct {
@@ -62,18 +63,51 @@ func (p *Parser) parseData() (Node, error) {
 
 	switch tk.Type {
 	case TT_LITINT:
+		iv, err := strconv.ParseInt(tk.SVal, 10, 64)
+
+		if err != nil {
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("`%s` is not a valid integer literal.", tk.SVal),
+			}
+		}
+
 		return &LitIntNode{
-			SVal:  tk.SVal,
+			Value: iv,
 			Token: tk,
 		}, nil
 	case TT_LITFLOAT:
+		fv, err := strconv.ParseFloat(tk.SVal, 64)
+
+		if err != nil {
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("`%s` is not a valid float literal.", tk.SVal),
+			}
+		}
+
 		return &LitFloatNode{
-			SVal:  tk.SVal,
+			Value: fv,
 			Token: tk,
 		}, nil
 	case TT_IDENT:
 		return &ReadVarNode{
 			Name:  tk.SVal,
+			Token: tk,
+		}, nil
+	case TT_QUOT:
+		// Next token must be IDENT
+		tk, err = p.read()
+
+		if tk.Type != TT_IDENT {
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("Expected identifier but got `%s`.", tk.SVal),
+			}
+		}
+
+		return &QuotNode{
+			Ident: tk.SVal,
 			Token: tk,
 		}, nil
 	default:
@@ -82,6 +116,98 @@ func (p *Parser) parseData() (Node, error) {
 			Msg:   fmt.Sprintf("Expected literal but got `%s`.", tk.SVal),
 		}
 	}
+}
+
+func (p *Parser) parseFunc() (Node, error) {
+	// Next token must be an LPAREN
+	tk, err := p.read()
+
+	firsttk := tk // remember for later
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tk.Type != TT_LPAREN {
+		return nil, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected `(` but got `%s`.", tk.SVal),
+		}
+	}
+
+	// then the next token must be FUNC
+
+	tk, err = p.read()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tk.Type != TT_FUNC {
+		return nil, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected `func` but got `%s`.", tk.SVal),
+		}
+	}
+
+	// then the next token must be IDENT
+
+	tk, err = p.read()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tk.Type != TT_IDENT {
+		return nil, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected identifier but got `%s`.", tk.SVal),
+		}
+	}
+
+	funcname := tk.SVal
+
+	args := make([]Arg, 8) // TODO: resize later
+	aj := 0
+
+	// then the arguments follow. which is at least one LPAREN then until RPAREN
+	tk, err = p.read()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if tk.Type != TT_LPAREN {
+		return nil, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected `(` but got `%s`.", tk.SVal),
+		}
+	}
+
+	for {
+		done := false
+
+		tk, err = p.read()
+
+		switch tk.Type {
+		case TT_RPAREN:
+			done = true
+		}
+
+		if done {
+			break
+		}
+	}
+
+	ret := VoidType
+
+	return &FuncNode{
+		Args:    args[:aj],
+		RetType: ret,
+		Body:    nil,
+		Token:   firsttk,
+		Name:    funcname,
+	}, nil
 }
 
 func (p *Parser) parseSExp() (Node, error) {
@@ -137,7 +263,7 @@ func (p *Parser) parseSExp() (Node, error) {
 
 			nodes[nj] = node
 			nj++
-		case TT_LITINT, TT_LITFLOAT, TT_IDENT:
+		case TT_LITINT, TT_LITFLOAT, TT_IDENT, TT_QUOT:
 			p.unread(tk)
 			node, err := p.parseData()
 
