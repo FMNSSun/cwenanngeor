@@ -52,9 +52,43 @@ func (p *Parser) unread(tk *Token) {
 	p.tk = tk
 }
 
-func (p *Parser) parseSExp() (*SExpNode, error) {
+func (p *Parser) parseData() (Node, error) {
+	// Next token must be LITINT or LITFLOAT or IDENT.
+	tk, err := p.read()
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch tk.Type {
+	case TT_LITINT:
+		return &LitIntNode{
+			SVal:  tk.SVal,
+			Token: tk,
+		}, nil
+	case TT_LITFLOAT:
+		return &LitFloatNode{
+			SVal:  tk.SVal,
+			Token: tk,
+		}, nil
+	case TT_IDENT:
+		return &ReadVarNode{
+			Name:  tk.SVal,
+			Token: tk,
+		}, nil
+	default:
+		return nil, &ParserError{
+			Token: tk,
+			Msg:   fmt.Sprintf("Expected literal but got `%s`.", tk.SVal),
+		}
+	}
+}
+
+func (p *Parser) parseSExp() (Node, error) {
 	// Next token must be an LPAREN
 	tk, err := p.read()
+
+	firsttk := tk // remember for later
 
 	if err != nil {
 		return nil, err
@@ -81,7 +115,8 @@ func (p *Parser) parseSExp() (*SExpNode, error) {
 		}
 	}
 
-	nodes := make([]Node, 256)
+	funcname := tk.SVal
+	nodes := make([]Node, 8) //TODO: resize this later
 	nj := 0
 
 	for {
@@ -91,7 +126,8 @@ func (p *Parser) parseSExp() (*SExpNode, error) {
 			return nil, err
 		}
 
-		if tk.Type == TT_LPAREN {
+		switch tk.Type {
+		case TT_LPAREN:
 			p.unread(tk)
 			node, err := p.parseSExp()
 
@@ -101,6 +137,27 @@ func (p *Parser) parseSExp() (*SExpNode, error) {
 
 			nodes[nj] = node
 			nj++
+		case TT_LITINT, TT_LITFLOAT, TT_IDENT:
+			p.unread(tk)
+			node, err := p.parseData()
+
+			if err != nil {
+				return nil, err
+			}
+
+			nodes[nj] = node
+			nj++
+		case TT_RPAREN:
+			return &SExpNode{
+				FuncName: funcname,
+				Exps:     nodes[:nj],
+				Token:    firsttk,
+			}, nil
+		default:
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("Expected `(`, identifier or literal but got `%s`.", tk.SVal),
+			}
 		}
 	}
 

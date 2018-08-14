@@ -4,23 +4,20 @@ import (
 	"testing"
 )
 
-func TestEmpty(t *testing.T) {
-}
-
-func TestSimple(t *testing.T) {
+func TestTokenizerSimple(t *testing.T) {
 	checkTypes("func", []TokenType{TT_FUNC}, t)
 	checkTypes("  func", []TokenType{TT_FUNC}, t)
 	checkTypes(" func ", []TokenType{TT_FUNC}, t)
 	checkTypes(" func\n func\n ", []TokenType{TT_FUNC, TT_FUNC}, t)
 }
 
-func TestSpecials(t *testing.T) {
+func TestTokenizerSpecials(t *testing.T) {
 	checkTypes("{}", []TokenType{TT_BEGIN, TT_END}, t)
 	checkTypes("func()", []TokenType{TT_FUNC, TT_LPAREN, TT_RPAREN}, t)
 	checkTypes(" ; ", []TokenType{TT_SEMICOLON}, t)
 }
 
-func TestLits(t *testing.T) {
+func TestTokenizerLits(t *testing.T) {
 	checkTypes("5", []TokenType{TT_LITINT}, t)
 	checkTypes("5.0", []TokenType{TT_LITFLOAT}, t)
 	checkTypes("1.", []TokenType{TT_LITFLOAT}, t)
