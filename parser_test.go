@@ -11,7 +11,36 @@ func TestParseSExp(t *testing.T) {
 		&FuncNode{
 			Name:    "main",
 			RetType: Type{Kind: TK_PRIM, Type: "float"},
-			Body:    nil,
+			Body:    []Node{},
+			Args: []Arg{
+				Arg{
+					Type: Type{Kind: TK_PRIM, Type: "int"},
+					Name: "a",
+				},
+			},
+		}, t)
+
+	checkASTFunc(
+		"(func main ((a int)) float (add 5 6) (sub 4 7))",
+		&FuncNode{
+			Name:    "main",
+			RetType: Type{Kind: TK_PRIM, Type: "float"},
+			Body: []Node{
+				&SExpNode{
+					FuncName: "add",
+					Exps: []Node{
+						&LitIntNode{Value: 5},
+						&LitIntNode{Value: 6},
+					},
+				},
+				&SExpNode{
+					FuncName: "sub",
+					Exps: []Node{
+						&LitIntNode{Value: 4},
+						&LitIntNode{Value: 7},
+					},
+				},
+			},
 			Args: []Arg{
 				Arg{
 					Type: Type{Kind: TK_PRIM, Type: "int"},

@@ -290,23 +290,49 @@ func (p *Parser) parseFunc() (Node, error) {
 		}
 	}
 
-	ret := VoidType
+	ret, err := p.parseType()
 
-	tk, err = p.read()
+	if err != nil {
+		return nil, err
+	}
 
-	if tk.Type != TT_RPAREN {
-		p.unread(tk)
-		ret, err = p.parseType()
+	bodies := make([]Node, 8) // TODO: resize later
+	bj := 0
+
+	for {
+		done := false
+
+		tk, err = p.read()
 
 		if err != nil {
 			return nil, err
+		}
+
+		switch tk.Type {
+		case TT_RPAREN:
+			done = true
+		case TT_LPAREN:
+			p.unread(tk)
+
+			sexp, err := p.parseSExp()
+
+			if err != nil {
+				return nil, err
+			}
+
+			bodies[bj] = sexp
+			bj++
+		}
+
+		if done {
+			break
 		}
 	}
 
 	return &FuncNode{
 		Args:    args[:aj],
 		RetType: ret,
-		Body:    nil,
+		Body:    bodies[:bj],
 		Token:   firsttk,
 		Name:    funcname,
 	}, nil
