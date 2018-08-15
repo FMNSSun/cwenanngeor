@@ -4,11 +4,6 @@ type Node interface {
 	IsNode() bool
 }
 
-type Module struct {
-	Name  string
-	Funcs []*FuncNode
-}
-
 type Arg struct {
 	Name string
 	Type Type

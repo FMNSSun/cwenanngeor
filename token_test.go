@@ -12,7 +12,7 @@ func TestTokenizerSimple(t *testing.T) {
 }
 
 func TestTokenizerSpecials(t *testing.T) {
-	checkTypes("{}", []TokenType{TT_BEGIN, TT_END}, t)
+	checkTypes("{}", []TokenType{TT_LCBRACKET, TT_RCBRACKET}, t)
 	checkTypes("func()", []TokenType{TT_FUNC, TT_LPAREN, TT_RPAREN}, t)
 	checkTypes(" ; ", []TokenType{TT_SEMICOLON}, t)
 }

@@ -22,8 +22,8 @@ type FilePos struct {
 type TokenType uint8
 
 const TT_FUNC = TokenType(1)
-const TT_BEGIN = TokenType(2)
-const TT_END = TokenType(3)
+const TT_LCBRACKET = TokenType(2)
+const TT_RCBRACKET = TokenType(3)
 const TT_IDENT = TokenType(4)
 const TT_LITINT = TokenType(5)
 const TT_SEMICOLON = TokenType(6)
@@ -44,6 +44,15 @@ type tokenizer struct {
 	fpath  string
 	lineno uint32
 	rn     rune
+}
+
+func NewTokenizerReader(r io.Reader, fpath string) Tokenizer {
+	return &tokenizer{
+		r:      bufio.NewReader(r),
+		fpath:  fpath,
+		lineno: 1,
+		rn:     eof,
+	}
 }
 
 func NewTokenizerString(code string) Tokenizer {
@@ -236,13 +245,13 @@ func (t *tokenizer) Next() (*Token, error) {
 	case '{':
 		return &Token{
 			SVal: "{",
-			Type: TT_BEGIN,
+			Type: TT_LCBRACKET,
 			Pos:  t.filepos(),
 		}, nil
 	case '}':
 		return &Token{
 			SVal: "}",
-			Type: TT_END,
+			Type: TT_RCBRACKET,
 			Pos:  t.filepos(),
 		}, nil
 	case '(':

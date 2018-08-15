@@ -192,6 +192,53 @@ func (p *Parser) parseType() (Type, error) {
 	}
 }
 
+func (p *Parser) Funcs() ([]*FuncNode, error) {
+	return p.parseFuncs()
+}
+
+func (p *Parser) parseFuncs() ([]*FuncNode, error) {
+	funcs := make([]*FuncNode, 8) // TODO: resize later
+	fj := 0
+
+	for {
+		tk, err := p.read()
+
+		if err != nil {
+			return nil, err
+		}
+
+		if tk.Type == TT_EOF {
+			break
+		}
+
+		if tk.Type != TT_LPAREN {
+			return nil, &ParserError{
+				Token: tk,
+				Msg:   fmt.Sprintf("Expected `(` but got `%s`.", tk.SVal),
+			}
+		}
+
+		p.unread(tk)
+
+		fn, err := p.parseFunc()
+
+		if err != nil {
+			return nil, err
+		}
+
+		fn_, ok := fn.(*FuncNode)
+
+		if !ok {
+			panic("BUG: didn't get *FuncNode")
+		}
+
+		funcs[fj] = fn_
+		fj++
+	}
+
+	return funcs[:fj], nil
+}
+
 func (p *Parser) parseFunc() (Node, error) {
 	// Next token must be an LPAREN
 	tk, err := p.read()
