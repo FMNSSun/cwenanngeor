@@ -176,17 +176,16 @@ func (p *Parser) parseType() (Type, error) {
 	tk, err := p.read()
 
 	if err != nil {
-		return VoidType, err
+		return InvalidType, err
 	}
 
 	if tk.Type == TT_IDENT {
-		return Type{
-			Kind: TK_PRIM,
+		return &PrimType{
 			Type: tk.SVal,
 		}, nil
 	}
 
-	return VoidType, &ParserError{
+	return InvalidType, &ParserError{
 		Token: tk,
 		Msg:   fmt.Sprintf("`%s` is not a type.", tk.SVal),
 	}
@@ -314,7 +313,6 @@ func (p *Parser) parseFunc() (Node, error) {
 		case TT_RPAREN:
 			done = true
 		case TT_LPAREN:
-			fmt.Println("got arg")
 			p.unread(tk)
 
 			arg, err := p.parseArg()

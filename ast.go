@@ -11,17 +11,35 @@ type Arg struct {
 
 var VoidArg Arg = Arg{}
 
-type Type struct {
-	Kind TypeKind
+type Type interface {
+	IsType() bool
+}
+
+type VoidType struct {
+}
+
+func (*VoidType) IsType() bool {
+	return true
+}
+
+type PrimType struct {
 	Type string
 }
 
-type TypeKind uint8
+func (*PrimType) IsType() bool {
+	return true
+}
 
-const TK_PRIM = TypeKind(0)
-const TK_LIST = TypeKind(1)
+type FuncType struct {
+	ArgTypes []Type
+	RetType  Type
+}
 
-var VoidType Type = Type{}
+func (*FuncType) IsType() bool {
+	return true
+}
+
+var InvalidType Type = nil
 
 type FuncNode struct {
 	Name    string
@@ -87,7 +105,24 @@ func (*SExpNode) IsNode() bool {
 }
 
 func TypeEqual(t1 Type, t2 Type) bool {
-	return t1.Kind == t2.Kind && t1.Type == t2.Type
+	switch t1.(type) {
+	case *VoidType:
+		switch t2.(type) {
+		case *VoidType:
+			return true
+		default:
+			return false
+		}
+	case *PrimType:
+		switch t2.(type) {
+		case *PrimType:
+			return t1.(*PrimType).Type == t2.(*PrimType).Type
+		default:
+			return false
+		}
+	}
+
+	return false
 }
 
 func ArgEqual(a1 Arg, a2 Arg) bool {

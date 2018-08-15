@@ -10,11 +10,11 @@ func TestParseSExp(t *testing.T) {
 		"(func main ((a int)) float)",
 		&FuncNode{
 			Name:    "main",
-			RetType: Type{Kind: TK_PRIM, Type: "float"},
+			RetType: &PrimType{Type: "float"},
 			Body:    []Node{},
 			Args: []Arg{
 				Arg{
-					Type: Type{Kind: TK_PRIM, Type: "int"},
+					Type: &PrimType{Type: "int"},
 					Name: "a",
 				},
 			},
@@ -24,7 +24,7 @@ func TestParseSExp(t *testing.T) {
 		"(func main ((a int)) float (add 5 6) (sub 4 7))",
 		&FuncNode{
 			Name:    "main",
-			RetType: Type{Kind: TK_PRIM, Type: "float"},
+			RetType: &PrimType{Type: "float"},
 			Body: []Node{
 				&SExpNode{
 					FuncName: "add",
@@ -43,7 +43,7 @@ func TestParseSExp(t *testing.T) {
 			},
 			Args: []Arg{
 				Arg{
-					Type: Type{Kind: TK_PRIM, Type: "int"},
+					Type: &PrimType{Type: "int"},
 					Name: "a",
 				},
 			},
