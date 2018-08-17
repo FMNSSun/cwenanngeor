@@ -94,14 +94,10 @@ func TypeCheck(modules map[string]*Module) error {
 			panic("BUG: TypeCheck 1.")
 		}
 
-		for fk, fv := range v.Funcs {
-			if fk != fv.Name {
-				panic("BUG: TypeCheck 2.")
-			}
-
+		for _, fn := range v.Funcs {
 			typeWorlds := NewTypeWorlds(builtins)
 
-			for _, node := range fv.Body {
+			for _, node := range fn.FuncNode.Body {
 				_, err := InferType(node, typeWorlds)
 
 				if err != nil {

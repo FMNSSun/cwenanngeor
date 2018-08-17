@@ -30,6 +30,14 @@ func (*PrimType) IsType() bool {
 	return true
 }
 
+type ContractType struct {
+	Funcs map[string]*FuncType
+}
+
+func (*ContractType) IsType() bool {
+	return true
+}
+
 type FuncType struct {
 	ArgTypes []Type
 	RetType  Type
@@ -40,6 +48,24 @@ func (*FuncType) IsType() bool {
 }
 
 var InvalidType Type = nil
+
+type RootNode struct {
+	Funcs     []*FuncNode
+	TypeDecls map[string]*TypeDeclNode
+}
+
+func (*RootNode) IsNode() bool {
+	return true
+}
+
+type TypeDeclNode struct {
+	Name string
+	Type Type
+}
+
+func (*TypeDeclNode) IsNode() bool {
+	return true
+}
 
 type FuncNode struct {
 	Name    string

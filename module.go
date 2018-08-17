@@ -9,7 +9,13 @@ import (
 type Module struct {
 	Name  string
 	Path  string
-	Funcs map[string]*FuncNode
+	Funcs map[string]*Func
+}
+
+type Func struct {
+	Type        Type
+	MangledName string
+	FuncNode    *FuncNode
 }
 
 type LoadModuleError struct {
@@ -21,6 +27,12 @@ type LoadModuleError struct {
 func (lme *LoadModuleError) Error() string {
 	return fmt.Sprintf("Load module error (dir: %q, file: %q): %s",
 		lme.ModulePath, lme.FilePath, lme.Msg)
+}
+
+func mkFunc(fn *FuncNode) *Func {
+	return &Func{
+		FuncNode: fn,
+	}
 }
 
 func LoadModule(mpath string) (*Module, error) {
@@ -54,9 +66,9 @@ func LoadModule(mpath string) (*Module, error) {
 		}
 	}
 
-	matches, err := filepath.Glob(filepath.Join(mpath, "*.cwe"))
+	funcs := make(map[string]*Func)
 
-	funcs := make(map[string]*FuncNode)
+	matches, err := filepath.Glob(filepath.Join(mpath, "*.cwe"))
 
 	for _, fpath := range matches {
 		f, err := os.OpenFile(fpath, os.O_RDONLY, 0)
@@ -82,14 +94,18 @@ func LoadModule(mpath string) (*Module, error) {
 		}
 
 		for _, lfunc := range lfuncs {
+			mangledName := MangleName("tbd", lfunc.Name, lfunc.Args, lfunc.RetType)
+
 			if funcs[lfunc.Name] != nil {
+
 				return nil, &LoadModuleError{
-					FilePath:   fpath,
 					ModulePath: mpath,
-					Msg:        fmt.Sprintf("Duplicate `%s`.", lfunc.Name),
+					FilePath:   fpath,
+					Msg:        fmt.Sprintf("Duplicate function `%s`.", mangledName), // TODO: human-readable message.
 				}
+
 			} else {
-				funcs[lfunc.Name] = lfunc
+				funcs[lfunc.Name] = mkFunc(lfunc)
 			}
 		}
 	}
