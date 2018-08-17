@@ -1,0 +1,5 @@
+(func bar ((i int)) int
+ (dummy 5))
+ 
+(func bar ((i int)) int
+ (dummy 5))

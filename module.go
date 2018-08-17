@@ -36,6 +36,8 @@ func mkFunc(fn *FuncNode) *Func {
 }
 
 func LoadModule(mpath string) (*Module, error) {
+	mname := filepath.Base(mpath)
+
 	// Make sure that mpath is a directory.
 
 	f, err := os.Open(mpath)
@@ -94,14 +96,12 @@ func LoadModule(mpath string) (*Module, error) {
 		}
 
 		for _, lfunc := range lfuncs {
-			mangledName := MangleName("tbd", lfunc.Name, lfunc.Args, lfunc.RetType)
-
 			if funcs[lfunc.Name] != nil {
 
 				return nil, &LoadModuleError{
 					ModulePath: mpath,
 					FilePath:   fpath,
-					Msg:        fmt.Sprintf("Duplicate function `%s`.", mangledName), // TODO: human-readable message.
+					Msg:        fmt.Sprintf("Duplicate function `%s`.", lfunc.Name),
 				}
 
 			} else {
@@ -111,7 +111,7 @@ func LoadModule(mpath string) (*Module, error) {
 	}
 
 	return &Module{
-		Name:  "tbd",
+		Name:  mname,
 		Path:  mpath,
 		Funcs: funcs,
 	}, nil
