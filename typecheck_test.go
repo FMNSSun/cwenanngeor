@@ -16,14 +16,14 @@ func mustErrorInferedTypeSExp(code string, wanted, got Type, t *testing.T) {
 	n, err := p.parseSExp()
 
 	if err != nil {
-		t.Fatalf("Unexpected error: %s", err.Error())
+		t.Fatalf("Unexpected error for %s: %s", code, err.Error())
 		return
 	}
 
-	_, err = InferType(n, NewTypeWorlds(builtins))
+	typ, err := InferType(n, NewTypeWorlds(builtins))
 
-	if err != nil {
-		t.Fatalf("Expected error but got none.")
+	if err == nil {
+		t.Fatalf("Expected error but got none for: %s. {%s}", code, typ)
 		return
 	}
 
@@ -31,16 +31,16 @@ func mustErrorInferedTypeSExp(code string, wanted, got Type, t *testing.T) {
 	case *TypeError:
 		te := err.(*TypeError)
 		if !TypeEqual(te.Wanted, wanted) {
-			t.Fatalf("Wanted mismatch %s != %s.", te.Wanted, wanted)
+			t.Fatalf("Wanted mismatch %s != %s for %s.", te.Wanted, wanted, code)
 			return
 		}
 
 		if !TypeEqual(te.Got, got) {
-			t.Fatalf("Got mismatch %s != %s.", te.Got, got)
+			t.Fatalf("Got mismatch %s != %s for %s.", te.Got, got, code)
 			return
 		}
 	default:
-		t.Fatalf("Unexpected error: %s", err.Error())
+		t.Fatalf("Unexpected error for %s: %s", code, err.Error())
 		return
 	}
 }
@@ -50,19 +50,19 @@ func checkInferedTypeSExp(code string, exp Type, t *testing.T) {
 	n, err := p.parseSExp()
 
 	if err != nil {
-		t.Fatalf("Unexpected error: %s", err.Error())
+		t.Fatalf("Unexpected error for %s: %s", code, err.Error())
 		return
 	}
 
 	typ, err := InferType(n, NewTypeWorlds(builtins))
 
 	if err != nil {
-		t.Fatalf("Unexpected error: %s", err.Error())
+		t.Fatalf("Unexpected error for %s: %s", code, err.Error())
 		return
 	}
 
 	if !TypeEqual(typ, exp) {
-		t.Fatalf("Expected type %s but got %s", exp, typ)
+		t.Fatalf("Expected type %s but got %s for %s.", exp, typ, code)
 		return
 	}
 }
