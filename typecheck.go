@@ -108,11 +108,24 @@ func TypeCheck(modules map[string]*Module) error {
 		for _, fn := range v.Funcs {
 			typeWorlds := NewTypeWorlds(builtins)
 
+			var lastType Type = &VoidType{}
+
 			for _, node := range fn.FuncNode.Body {
-				_, err := InferType(node, typeWorlds)
+				typ, err := InferType(node, typeWorlds)
 
 				if err != nil {
 					return err
+				}
+
+				lastType = typ
+			}
+
+			if !TypeEqual(lastType, fn.FuncNode.RetType) {
+				return &TypeError{
+					Wanted: fn.FuncNode.RetType,
+					Got:    lastType,
+					Token:  fn.FuncNode.Token,
+					Extra:  fmt.Sprintf("(type of last statement does not match return type of the function)"),
 				}
 			}
 		}

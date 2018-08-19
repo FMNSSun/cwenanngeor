@@ -1,5 +1,10 @@
 package cwenanngeor
 
+import (
+	"sort"
+	"strings"
+)
+
 type Node interface {
 	IsNode() bool
 }
@@ -13,6 +18,7 @@ var VoidArg Arg = Arg{}
 
 type Type interface {
 	IsType() bool
+	String() string
 }
 
 type VoidType struct {
@@ -20,6 +26,37 @@ type VoidType struct {
 
 func (*VoidType) IsType() bool {
 	return true
+}
+
+func (*VoidType) String() string {
+	return "void"
+}
+
+type UnionType struct {
+	Types []Type
+}
+
+func (*UnionType) IsType() bool {
+	return true
+}
+
+func (ut *UnionType) String() string {
+	s := make([]string, 0)
+	for _, typ := range ut.Types {
+		s = append(s, typ.String())
+	}
+
+	return "{" + strings.Join(s, " ") + "}"
+}
+
+func NewUnionType(types []Type) *UnionType {
+	sort.Slice(types, func(i, j int) bool {
+		return TypeCmp(types[i], types[j]) < 0
+	})
+
+	return &UnionType{
+		Types: types,
+	}
 }
 
 type PrimType struct {
@@ -49,6 +86,16 @@ type FuncType struct {
 
 func (*FuncType) IsType() bool {
 	return true
+}
+
+func (ft *FuncType) String() string {
+	s := make([]string, 0)
+
+	for _, argType := range ft.ArgTypes {
+		s = append(s, argType.String())
+	}
+
+	return "func{" + strings.Join(s, " ") + " : " + ft.RetType.String() + "}"
 }
 
 var InvalidType Type = nil
@@ -135,24 +182,63 @@ func (*SExpNode) IsNode() bool {
 }
 
 func TypeEqual(t1 Type, t2 Type) bool {
+	return TypeCmp(t1, t2) == 0
+}
+
+func TypeCmp(t1 Type, t2 Type) int {
+	// The order of types is:
+	// - void type
+	// - prim type
+	//   - sorted alphabetically
+	// - union type
+
 	switch t1.(type) {
 	case *VoidType:
 		switch t2.(type) {
 		case *VoidType:
-			return true
+			return 0
 		default:
-			return false
+			return -1 // void type comes before any other type
 		}
 	case *PrimType:
 		switch t2.(type) {
 		case *PrimType:
-			return t1.(*PrimType).Type == t2.(*PrimType).Type
-		default:
-			return false
+			return strings.Compare(t1.(*PrimType).Type, t2.(*PrimType).Type)
+		case *VoidType:
+			return 1 // PrimType comes after VoidType
+		case *UnionType:
+			return -1 // but it comes before UnionType
+		}
+	case *UnionType:
+		switch t2.(type) {
+		case *PrimType:
+			return 1 // UnionType comes after PrimType
+		case *VoidType:
+			return 1 // and after VoidType
+		case *UnionType:
+			// fewer types first / more types second
+			ut1 := t1.(*UnionType)
+			ut2 := t2.(*UnionType)
+
+			if len(ut1.Types) < len(ut1.Types) {
+				return -1
+			} else if len(ut1.Types) > len(ut2.Types) {
+				return 1
+			}
+
+			for i := 0; i < len(ut1.Types); i++ {
+				c := TypeCmp(ut1.Types[i], ut2.Types[i])
+
+				if c != 0 {
+					return c
+				}
+			}
+
+			return 0
 		}
 	}
 
-	return false
+	panic("BUG: can't compare these types?")
 }
 
 func ArgEqual(a1 Arg, a2 Arg) bool {

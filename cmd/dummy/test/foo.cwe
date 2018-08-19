@@ -1,2 +1,2 @@
-(func foo () string
+(func test () {int string}
  (square.i 5))

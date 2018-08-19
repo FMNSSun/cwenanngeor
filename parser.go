@@ -185,10 +185,48 @@ func (p *Parser) parseType() (Type, error) {
 		return InvalidType, err
 	}
 
-	if tk.Type == TT_IDENT {
+	switch tk.Type {
+	case TT_IDENT:
 		return &PrimType{
 			Type: tk.SVal,
 		}, nil
+	case TT_LCBRACKET:
+		types := make([]Type, 0)
+
+		for {
+			done := false
+
+			tk, err := p.read()
+
+			if err != nil {
+				return InvalidType, err
+			}
+
+			switch tk.Type {
+			case TT_IDENT, TT_LCBRACKET:
+				p.unread(tk)
+				typ, err := p.parseType()
+
+				if err != nil {
+					return InvalidType, err
+				}
+
+				types = append(types, typ)
+			case TT_RCBRACKET:
+				done = true
+			default:
+				return InvalidType, &ParserError{
+					Token: tk,
+					Msg:   fmt.Sprintf("Expected identifier or `{` but got `%s`.", tk.SVal),
+				}
+			}
+
+			if done {
+				break
+			}
+		}
+
+		return NewUnionType(types), nil
 	}
 
 	return InvalidType, &ParserError{

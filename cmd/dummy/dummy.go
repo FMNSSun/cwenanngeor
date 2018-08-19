@@ -15,7 +15,7 @@ func main() {
 	}
 	
 	spew.Dump(m)
-	fmt.Println("")
+	fmt.Printf("\n\n%#v\n\n", m)
 	
 	err = cwe.TypeCheck(map[string]*cwe.Module{"test":m})
 	

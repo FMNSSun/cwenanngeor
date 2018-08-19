@@ -4,6 +4,15 @@ import (
 	"testing"
 )
 
+func TestParseType(t *testing.T) {
+	checkParseType("int", &PrimType{Type: "int"}, t)
+	checkParseType("{int float}", NewUnionType(
+		[]Type{
+			&PrimType{Type: "int"},
+			&PrimType{Type: "float"},
+		}), t)
+}
+
 func TestParseSExp(t *testing.T) {
 
 	checkASTFunc(
@@ -90,11 +99,11 @@ func checkASTFunc(code string, exp Node, t *testing.T) {
 	n, err := p.parseFunc()
 
 	if err != nil {
-		t.Fatalf("Unexpected error: %s.", err.Error())
+		t.Fatalf("Unexpected error for %s: %s.", code, err.Error())
 	}
 
 	if !ASTEqual(n, exp) {
-		t.Fatalf("ASTs do not match! %+v %+v", n, exp)
+		t.Fatalf("ASTs do not match for %s! %+v %+v", code, n, exp)
 	}
 }
 
@@ -104,10 +113,28 @@ func checkASTSExp(code string, exp Node, t *testing.T) {
 	n, err := p.parseSExp()
 
 	if err != nil {
-		t.Fatalf("Unexpected error: %s.", err.Error())
+		t.Fatalf("Unexpected error for %s: %s.", code, err.Error())
+		return
 	}
 
 	if !ASTEqual(n, exp) {
-		t.Fatalf("ASTs do not match! %v %v", n, exp)
+		t.Fatalf("ASTs do not match for %s! %v %v", code, n, exp)
+		return
+	}
+}
+
+func checkParseType(code string, exp Type, t *testing.T) {
+	p := NewParser(NewTokenizerString(code))
+
+	n, err := p.parseType()
+
+	if err != nil {
+		t.Fatalf("Unexpected error for %s: %s.", code, err.Error())
+		return
+	}
+
+	if !TypeEqual(n, exp) {
+		t.Fatalf("Got type %s but wanted %s for %s.", n, exp, code)
+		return
 	}
 }
