@@ -1,5 +1,2 @@
-(func bar ((i int)) int
- (dummy 5))
- 
-(func bar ((i int)) int
- (dummy 5))
+(func foo () string
+ (square.i 5.0))
