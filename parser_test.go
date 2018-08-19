@@ -6,11 +6,13 @@ import (
 
 func TestParseType(t *testing.T) {
 	checkParseType("int", &PrimType{Type: "int"}, t)
-	checkParseType("{int float}", NewUnionType(
+	ut, _ := NewUnionType(
 		[]Type{
 			&PrimType{Type: "int"},
 			&PrimType{Type: "float"},
-		}), t)
+		})
+	checkParseType("{int float}", ut, t)
+	mustErrorParseType("{int {foo bar} float}", t)
 }
 
 func TestParseSExp(t *testing.T) {
@@ -135,6 +137,17 @@ func checkParseType(code string, exp Type, t *testing.T) {
 
 	if !TypeEqual(n, exp) {
 		t.Fatalf("Got type %s but wanted %s for %s.", n, exp, code)
+		return
+	}
+}
+
+func mustErrorParseType(code string, t *testing.T) {
+	p := NewParser(NewTokenizerString(code))
+
+	_, err := p.parseType()
+
+	if err == nil {
+		t.Fatalf("Expected error but got none for: %s", code)
 		return
 	}
 }

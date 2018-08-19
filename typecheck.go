@@ -53,6 +53,62 @@ var builtins map[string]Type = map[string]Type{
 	},
 }
 
+func TypeCompatibleWith(a Type, b Type) bool {
+	switch a.(type) {
+	case *VoidType:
+		switch b.(type) {
+		case *VoidType:
+			return true
+		default:
+			return false
+		}
+	case *PrimType:
+		switch b.(type) {
+		case *PrimType:
+			return TypeEqual(a, b)
+		case *UnionType:
+			ut := b.(*UnionType)
+
+			for _, typ := range ut.Types {
+				if TypeEqual(a, typ) {
+					return true
+				}
+			}
+
+			return false
+		default:
+			return false
+		}
+	case *UnionType:
+		switch b.(type) {
+		case *UnionType:
+			// all types of a must be types of b as well.
+			ut_a := a.(*UnionType)
+			ut_b := b.(*UnionType)
+
+			for _, typ_a := range ut_a.Types {
+				found := false
+				for _, typ_b := range ut_b.Types {
+					if TypeEqual(typ_a, typ_b) {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return false
+				}
+			}
+
+			return true
+		default:
+			return false
+		}
+	}
+
+	panic("BUG: Can't tell if compatible or not?")
+}
+
 func InferType(node Node, typeWorlds TypeWorlds) (Type, error) {
 	switch node.(type) {
 	case *LitFloatNode:
@@ -120,12 +176,12 @@ func TypeCheck(modules map[string]*Module) error {
 				lastType = typ
 			}
 
-			if !TypeEqual(lastType, fn.FuncNode.RetType) {
+			if !TypeCompatibleWith(lastType, fn.FuncNode.RetType) {
 				return &TypeError{
 					Wanted: fn.FuncNode.RetType,
 					Got:    lastType,
 					Token:  fn.FuncNode.Token,
-					Extra:  fmt.Sprintf("(type of last statement does not match return type of the function)"),
+					Extra:  fmt.Sprintf("(type of last statement is not compatible with return type of the function)"),
 				}
 			}
 		}

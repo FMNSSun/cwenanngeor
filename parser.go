@@ -203,7 +203,7 @@ func (p *Parser) parseType() (Type, error) {
 			}
 
 			switch tk.Type {
-			case TT_IDENT, TT_LCBRACKET:
+			case TT_IDENT:
 				p.unread(tk)
 				typ, err := p.parseType()
 
@@ -212,12 +212,17 @@ func (p *Parser) parseType() (Type, error) {
 				}
 
 				types = append(types, typ)
+			case TT_LCBRACKET:
+				return InvalidType, &ParserError{
+					Token: tk,
+					Msg:   fmt.Sprintf("Unexpected %s. Union types can not be nested.", tk.SVal),
+				}
 			case TT_RCBRACKET:
 				done = true
 			default:
 				return InvalidType, &ParserError{
 					Token: tk,
-					Msg:   fmt.Sprintf("Expected identifier or `{` but got `%s`.", tk.SVal),
+					Msg:   fmt.Sprintf("Expected identifier but got `%s`.", tk.SVal),
 				}
 			}
 
