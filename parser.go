@@ -226,7 +226,16 @@ func (p *Parser) parseType() (Type, error) {
 			}
 		}
 
-		return NewUnionType(types), nil
+		ut, err := NewUnionType(types)
+
+		if err != nil {
+			return InvalidType, &ParserError{
+				Token: tk,
+				Msg:   err.Error(),
+			}
+		}
+
+		return ut, nil
 	}
 
 	return InvalidType, &ParserError{

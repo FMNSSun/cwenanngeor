@@ -1,2 +1,2 @@
-(func test () {int string}
+(func test () {{int string} float int {string int}}
  (square.i 5))

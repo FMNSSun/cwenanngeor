@@ -1,6 +1,7 @@
 package cwenanngeor
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
@@ -49,14 +50,20 @@ func (ut *UnionType) String() string {
 	return "{" + strings.Join(s, " ") + "}"
 }
 
-func NewUnionType(types []Type) *UnionType {
+func NewUnionType(types []Type) (*UnionType, error) {
 	sort.Slice(types, func(i, j int) bool {
 		return TypeCmp(types[i], types[j]) < 0
 	})
 
+	for i := 0; i < len(types); i++ {
+		if i != 0 && TypeEqual(types[i], types[i-1]) {
+			return nil, fmt.Errorf("Duplicate type `%s` in union type `%s`.", types[i], &UnionType{Types: types})
+		}
+	}
+
 	return &UnionType{
 		Types: types,
-	}
+	}, nil
 }
 
 type PrimType struct {
