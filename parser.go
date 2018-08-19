@@ -6,8 +6,8 @@ import (
 )
 
 type Parser struct {
-	tz Tokenizer
-	tk *Token
+	tz    Tokenizer
+	tkbuf []*Token
 }
 
 type ParserError struct {
@@ -24,15 +24,26 @@ func (pe *ParserError) Error() string {
 
 func NewParser(tz Tokenizer) *Parser {
 	return &Parser{
-		tz: tz,
-		tk: nil,
+		tz:    tz,
+		tkbuf: make([]*Token, 0),
 	}
 }
 
+func (p *Parser) readbuf() *Token {
+	if len(p.tkbuf) == 0 {
+		return nil
+	}
+
+	it := p.tkbuf[0]
+	p.tkbuf = p.tkbuf[1:]
+
+	return it
+}
+
 func (p *Parser) read() (*Token, error) {
-	if p.tk != nil {
-		it := p.tk
-		p.tk = nil
+	it := p.readbuf()
+
+	if it != nil {
 		return it, nil
 	}
 
@@ -46,11 +57,7 @@ func (p *Parser) read() (*Token, error) {
 }
 
 func (p *Parser) unread(tk *Token) {
-	if p.tk != nil {
-		panic("BUG p.tk is not nil")
-	}
-
-	p.tk = tk
+	p.tkbuf = append(p.tkbuf, tk)
 }
 
 func (p *Parser) parseData() (Node, error) {

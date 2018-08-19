@@ -35,6 +35,7 @@ const TT_LITFLOAT = TokenType(11)
 const TT_EOF = TokenType(12)
 const TT_QUOT = TokenType(13)
 const TT_NUMSIGN = TokenType(14)
+const TT_STRUCT = TokenType(15)
 
 type Tokenizer interface {
 	Next() (*Token, error)
@@ -208,6 +209,12 @@ func (t *tokenizer) ident(rn rune) (*Token, error) {
 			Type: TT_FUNC,
 			Pos:  t.filepos(),
 		}, nil
+	case "struct":
+		return &Token{
+			SVal: str,
+			Type: TT_STRUCT,
+			Pos:  t.filepos(),
+		}, nil
 	}
 
 	return &Token{
@@ -281,7 +288,7 @@ func (t *tokenizer) Next() (*Token, error) {
 		}, nil
 	}
 
-	if isletter(rn) {
+	if isletter(rn) || rn == '%' {
 		return t.ident(rn)
 	} else if isdigit(rn) || rn == '-' {
 		return t.litintfloat(rn)
