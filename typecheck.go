@@ -8,6 +8,7 @@ type TypeError struct {
 	Wanted Type
 	Got    Type
 	Token  *Token
+	Extra  string
 }
 
 type TypeWorld map[string]Type
@@ -30,12 +31,17 @@ func NewTypeWorlds(typeWorlds ...TypeWorld) TypeWorlds {
 }
 
 func (te *TypeError) Error() string {
-	return fmt.Sprintf("Type error (file: %q, line: %d): Wanted type `%s` but got type `%s`.",
-		te.Token.Pos.FilePath, te.Token.Pos.LineNumber, te.Wanted, te.Got)
+	if te.Extra == "" {
+		return fmt.Sprintf("Type error %s: Wanted type `%s` but got type `%s`.",
+			te.Token.Pos, te.Wanted, te.Got)
+	} else {
+		return fmt.Sprintf("Type error %s %s: Wanted type `%s` but got type `%s`.",
+			te.Extra, te.Token.Pos, te.Wanted, te.Got)
+	}
 }
 
 var builtins map[string]Type = map[string]Type{
-	"cast.i.i": &FuncType{
+	"square.i": &FuncType{
 		ArgTypes: []Type{
 			&PrimType{
 				Type: "int",
@@ -49,6 +55,10 @@ var builtins map[string]Type = map[string]Type{
 
 func InferType(node Node, typeWorlds TypeWorlds) (Type, error) {
 	switch node.(type) {
+	case *LitFloatNode:
+		return &PrimType{Type: "float"}, nil
+	case *LitIntNode:
+		return &PrimType{Type: "int"}, nil
 	case *SExpNode:
 		sexp := node.(*SExpNode)
 
@@ -78,6 +88,7 @@ func InferType(node Node, typeWorlds TypeWorlds) (Type, error) {
 					Wanted: funcType.ArgTypes[i],
 					Got:    typ,
 					Token:  sexp.Token,
+					Extra:  fmt.Sprintf("in a call to `%s`", sexp.FuncName),
 				}
 			}
 		}

@@ -30,6 +30,10 @@ func (*PrimType) IsType() bool {
 	return true
 }
 
+func (pt *PrimType) String() string {
+	return pt.Type
+}
+
 type ContractType struct {
 	Funcs map[string]*FuncType
 }

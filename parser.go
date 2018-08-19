@@ -16,9 +16,8 @@ type ParserError struct {
 }
 
 func (pe *ParserError) Error() string {
-	return fmt.Sprintf("Parser error (file: %s, line: %d): %s",
-		pe.Token.Pos.FilePath,
-		pe.Token.Pos.LineNumber,
+	return fmt.Sprintf("Parser error %s: %s",
+		pe.Token.Pos,
 		pe.Msg)
 }
 

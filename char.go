@@ -1,7 +1,7 @@
 package cwenanngeor
 
 func isident(rn rune) bool {
-	return isletter(rn)
+	return isletter(rn) || rn == '.'
 }
 
 func isdigit(rn rune) bool {

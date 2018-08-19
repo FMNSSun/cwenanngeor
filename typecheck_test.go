@@ -4,9 +4,9 @@ import (
 	"testing"
 )
 
-func testInferType(t *testing.T) {
-	checkInferedTypeSExp("(dummy 5)", &PrimType{Type: "int"}, t)
-	mustErrorInferedTypeSExp("(dummy 5.0)",
+func TestInferType(t *testing.T) {
+	checkInferedTypeSExp("(square.i 5)", &PrimType{Type: "int"}, t)
+	mustErrorInferedTypeSExp("(square.i 5.0)",
 		&PrimType{Type: "int"},
 		&PrimType{Type: "float"}, t)
 }

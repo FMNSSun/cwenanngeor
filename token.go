@@ -16,7 +16,12 @@ type Token struct {
 
 type FilePos struct {
 	LineNumber uint32
+	CharNumber uint32
 	FilePath   string
+}
+
+func (fp *FilePos) String() string {
+	return fmt.Sprintf("(file: %q, line: %d, char: %d)", fp.FilePath, fp.LineNumber, fp.CharNumber)
 }
 
 type TokenType uint8
@@ -45,6 +50,7 @@ type tokenizer struct {
 	r      *bufio.Reader
 	fpath  string
 	lineno uint32
+	charno uint32
 	rn     rune
 }
 
@@ -53,6 +59,7 @@ func NewTokenizerReader(r io.Reader, fpath string) Tokenizer {
 		r:      bufio.NewReader(r),
 		fpath:  fpath,
 		lineno: 1,
+		charno: 1,
 		rn:     eof,
 	}
 }
@@ -62,6 +69,7 @@ func NewTokenizerString(code string) Tokenizer {
 		r:      bufio.NewReader(strings.NewReader(code)),
 		fpath:  "<memory>",
 		lineno: 1,
+		charno: 1,
 		rn:     eof,
 	}
 }
@@ -72,9 +80,7 @@ type TokenizerError struct {
 }
 
 func (te *TokenizerError) Error() string {
-	return fmt.Sprintf("Error (file: %q, line: %d): %s", te.Pos.FilePath,
-		te.Pos.LineNumber, te.Err.Error(),
-	)
+	return fmt.Sprintf("Error %s: %s", te.Pos, te.Err.Error())
 }
 
 var eof = rune(0)
@@ -83,6 +89,7 @@ func (t *tokenizer) filepos() *FilePos {
 	return &FilePos{
 		LineNumber: t.lineno,
 		FilePath:   t.fpath,
+		CharNumber: t.charno,
 	}
 }
 
@@ -113,6 +120,11 @@ func (t *tokenizer) read() (rune, error) {
 
 	if rn == '\n' {
 		t.lineno++
+		t.charno = 1
+	} else {
+		if rn != '\r' {
+			t.charno++
+		}
 	}
 
 	return rn, nil

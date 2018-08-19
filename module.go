@@ -83,7 +83,7 @@ func LoadModule(mpath string) (*Module, error) {
 			}
 		}
 
-		p := NewParser(NewTokenizerReader(f, mpath))
+		p := NewParser(NewTokenizerReader(f, fpath))
 
 		lfuncs, err := p.Funcs()
 

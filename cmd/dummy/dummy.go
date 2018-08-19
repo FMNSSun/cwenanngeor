@@ -16,4 +16,10 @@ func main() {
 	
 	spew.Dump(m)
 	fmt.Println("")
+	
+	err = cwe.TypeCheck(map[string]*cwe.Module{"test":m})
+	
+	if err != nil {
+		panic(err.Error())
+	}
 }
