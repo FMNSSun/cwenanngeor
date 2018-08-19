@@ -1,2 +1,2 @@
 (func foo () string
- (square.i 5.0))
+ (square.i 5))
